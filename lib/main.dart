@@ -1,68 +1,73 @@
+// import 'package:bloc/bloc.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:flutter/material.dart';
-import 'package:music_list/details.dart';
+import 'package:music_list/library.dart';
+import 'package:music_list/home.dart';
+import 'package:scoped_model/scoped_model.dart';
+import 'package:music_list/models/MusicListModel.dart';
 
-void main() {
-  runApp(MyApp());
+import 'package:flutter_downloader/flutter_downloader.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await FlutterDownloader.initialize(
+    debug: true // optional: set false to disable printing logs to console
+  );
+
+  runApp(MyApp(
+    model: MusicListModel()
+  ));
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class MyApp extends StatefulWidget {
+  final MusicListModel model;
+  const MyApp({Key key, @required this.model}) : super(key: key);
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      home: ListPage(),
-    );
-  }
+  _MyAppState createState() => _MyAppState();
 }
 
-class ListPage extends StatelessWidget {
-  ListPage({Key key}) : super(key: key);
-  // dummy list data
-  final List<Music> musics = <Music>[
-    Music('https://picsum.photos/id/1024/', title: 'Eagle', desc: 'Fly!!'),
-    Music('https://picsum.photos/id/1025/', title: 'Pug', desc: 'cozyy'),
-    Music('https://picsum.photos/id/1062/', title: 'Pug II', desc: 'more cozyyy'),
-    Music('https://picsum.photos/id/1069/', title: 'Jellyfish', desc: 'is swimming'),
-    Music('https://picsum.photos/id/1074/', title: 'Lioness', desc: 'WAT YA LOOKING AT?'),
-    Music('https://picsum.photos/id/1084/', title: 'Walrus', desc: 'oops'),
-    Music('https://picsum.photos/id/169/', title: 'Hounds', desc: 'sniff sniff'),
-    Music('https://picsum.photos/id/200/', title: 'Buffalo', desc: '(Jay Chow)'),
-    Music('https://picsum.photos/id/219/', title: 'Leopard', desc: 'WATCHA LOOKING AT??'),
-    Music('https://picsum.photos/id/237/', title: 'Labrador', desc: 'u can‘t resist me'),
-  ];
+class _MyAppState extends State<MyApp> {
+  int _selectedIdx = 0;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ListView.builder(
-        itemCount: 10,
-        itemBuilder: (context, index) {
-          return ListTile(
-            leading: Hero(
-              tag: musics[index].title,
-              child: Image.network(musics[index].imgSrc + '200'),
-            ),
-            title: Text(musics[index].title),
-            subtitle: Text(musics[index].desc),
-            onTap: () => _onTap(context, musics[index]),
-          );
-        }
+    List<Widget> _pages = <Widget>[HomePage(model: widget.model), LibraryPage(model: widget.model)];
+    
+    return ScopedModel<MusicListModel>(
+      model: widget.model,
+      child: MaterialApp(
+        title: 'Music App Demo',
+        home: Scaffold(
+          body: ScopedModelDescendant<MusicListModel>(
+            builder: (context, child, model) {
+              return _pages[_selectedIdx];
+              // return LibraryPage(model: model);
+            },
+          ),
+          bottomNavigationBar: BottomNavigationBar(
+            items: const <BottomNavigationBarItem>[
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                title: Text('Home'),
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.business),
+                title: Text('Library'),
+              ),
+            ],
+            currentIndex: _selectedIdx,
+            selectedItemColor: Colors.amber[800],
+            onTap: (int i) {
+              setState(() {
+                _selectedIdx = i;
+              });
+            },
+          ),
+        ),
       ),
     );
   }
-
-  void _onTap (BuildContext context, Music music) {
-    Navigator.push(
-      context, 
-      MaterialPageRoute( builder: (context) => MusicDetailsPage(music: music) )
-    );
-  }
 }
 
-class Music {
-  Music(this.imgSrc, {this.title = '', this.desc = ''});
-  String imgSrc;
-  String title;
-  String desc;
-}

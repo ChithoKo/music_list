@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:music_list/main.dart';
+import 'package:music_list/models/Music.dart';
 
 class MusicDetailsPage extends StatelessWidget {
   const MusicDetailsPage({Key key, this.music}) : super(key: key);
